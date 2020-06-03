@@ -16,6 +16,8 @@
 
 #include <curl/curl.h>
 #include <jansson.h>
+#include <sys/time.h>
+
 
 NEB_API_VERSION (CURRENT_NEB_API_VERSION);
 
@@ -27,6 +29,8 @@ void *alerta_module_handle = NULL;
 int check_handler (int, void *);
 
 int debug = 0;
+
+struct timeval cur_time;
 
 #define MESSAGE_SIZE        32768
 #define VALUE_SIZE          1024
@@ -409,6 +413,9 @@ check_handler (int event_type, void *data)
   char cov_project[PROJECT_SIZE] = "";
   customvariablesmember *customvar = NULL;
 
+  gettimeofday(&cur_time, NULL);
+  json_int_t mill_time = (cur_time.tv_sec) * 1000 + (int)(cur_time.tv_usec) / 1000;
+
   json_t *json;
 
   switch (event_type)
@@ -471,6 +478,7 @@ check_handler (int event_type, void *data)
         process_macros (raw_command, &command_line, 0);
 #endif
         json = json_object ();
+        json_object_set_new (json, "timestamp", json_integer(mill_time));
         json_object_set_new (json, "location", json_string (location));
         json_object_set_new (json, "project", json_string (project));
         json_object_set_new (json, "origin", json_pack ("s+", "nagios/", hostname));
@@ -545,6 +553,7 @@ check_handler (int event_type, void *data)
             }
 
             json = json_object ();
+            json_object_set_new (json, "timestamp", json_integer(mill_time));
             json_object_set_new (json, "location", json_string (location));
             json_object_set_new (json, "project", json_string (project));
             json_object_set_new (json, "origin", json_pack ("s+", "nagios/", svc_chk_data->host_name));
@@ -607,6 +616,7 @@ check_handler (int event_type, void *data)
           process_macros (raw_command, &command_line, 0);
 #endif
           json = json_object ();
+          json_object_set_new (json, "timestamp", json_integer(mill_time));
           json_object_set_new (json, "location", json_string (location));
           json_object_set_new (json, "project", json_string (project));
           json_object_set_new (json, "origin", json_pack ("s+", "nagios/", hostname));
@@ -681,6 +691,7 @@ check_handler (int event_type, void *data)
         HASH_ADD_STR (downtimes, key, dt);
 
         json = json_object ();
+        json_object_set_new (json, "timestamp", json_integer(mill_time));
         json_object_set_new (json, "location", json_string (location));
         json_object_set_new (json, "project", json_string (project));
         json_object_set_new (json, "origin", json_pack ("s+", "nagios/", hostname));
