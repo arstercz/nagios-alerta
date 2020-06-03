@@ -17,6 +17,7 @@
 #include <curl/curl.h>
 #include <jansson.h>
 #include <sys/time.h>
+#include <stdlib.h>
 
 
 NEB_API_VERSION (CURRENT_NEB_API_VERSION);
@@ -30,6 +31,7 @@ int check_handler (int, void *);
 
 int debug = 0;
 
+int timeout = 3;
 struct timeval cur_time;
 
 #define MESSAGE_SIZE        32768
@@ -263,6 +265,7 @@ send_to_alerta (char *url, char *message)
   curl_easy_setopt (curl, CURLOPT_HTTPHEADER, headers);
   curl_easy_setopt (curl, CURLOPT_USERAGENT, user_agent);
   curl_easy_setopt (curl, CURLOPT_POSTFIELDS, message);
+  curl_easy_setopt (curl, CURLOPT_TIMEOUT, timeout);
   if (debug)
   {
     curl_easy_setopt (curl, CURLOPT_VERBOSE, 1L);
@@ -350,6 +353,12 @@ nebmodule_init (int flags, char *args, nebmodule * handle)
       strcpy (location, token + 9);
     if (strncasecmp (token, "project=", 8) == 0)
       strcpy (project, token + 8);
+    if (strncasecmp (token, "timeout=", 8) == 0)
+    {
+      int tout = atoi(token);
+      if (tout > 0 && tout < 60)
+         timeout = tout;
+    }
   }
   if (strlen (endpoint))
   {
