@@ -1,9 +1,6 @@
 SRC_MODULE=./src
 
-all: get-deps
-
-get-deps:
-	sudo apt-get -y install libjansson-dev
+all:
 
 nagios3:
 	cd $(SRC_MODULE) && $(MAKE) nagios3

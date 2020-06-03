@@ -34,9 +34,7 @@ Installation (Nagios 3)
 
     $ git clone https://github.com/alerta/nagios-alerta.git
     $ cd nagios-alerta
-    $ make
-    $ sudo make install
-    $ sudo service nagios restart
+    $ make nagios3
 
 Installation (Nagios 4)
 ------------
@@ -44,8 +42,6 @@ Installation (Nagios 4)
     $ git clone https://github.com/alerta/nagios-alerta.git
     $ cd nagios-alerta
     $ make nagios4
-    $ sudo make install
-    $ sudo service nagios restart
 
 Alerts
 ------
@@ -79,6 +75,11 @@ And to enable debug mode:
 broker_module=/usr/lib/nagios/alerta-neb.o http://localhost:8080 debug=1
 ```
 
+To specify the location and project name:
+```
+broker_module=/usr/lib/nagios/alerta-neb.o http://localhost:8080 debug=1 localtion=beijing project=testp
+```
+
 **Note:** The default `environment` is `Production` and the default `service` is `Platform`.
 
 Setting Environment & Service Per-Check
@@ -96,6 +97,8 @@ define host{
         address                 127.0.0.1
         _Environment            Development
         _Service                Network
+        _Location               Beijing
+        _Project                testp
         }
 ```
 

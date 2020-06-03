@@ -39,6 +39,8 @@ int debug = 0;
 #define CUSTOMER_SIZE       1024
 #define KEY_SIZE            2048
 #define TEMP_SIZE           2048
+#define LOCATION_SIZE       512
+#define PROJECT_SIZE        256
 
 char message[MESSAGE_SIZE];
 char value[VALUE_SIZE];
@@ -52,6 +54,8 @@ char environment[ENVIRONMENT_SIZE] = "Production";
 char customer[CUSTOMER_SIZE];
 char temp[TEMP_SIZE];
 char hard_states_only = 0;
+char location[LOCATION_SIZE];
+char project[PROJECT_SIZE];
 
 static CURL *curl = NULL;
 
@@ -338,6 +342,10 @@ nebmodule_init (int flags, char *args, nebmodule * handle)
       debug = 1;
     if (strncasecmp (token, "hard_only=1", 11) == 0)
       hard_states_only = 1;
+    if (strncasecmp (token, "location=", 9) == 0)
+      strcpy (location, token + 9);
+    if (strncasecmp (token, "project=", 8) == 0)
+      strcpy (project, token + 8);
   }
   if (strlen (endpoint))
   {
@@ -397,6 +405,8 @@ check_handler (int event_type, void *data)
   char cov_environment[KEY_SIZE] = "";
   char cov_customer[KEY_SIZE] = "";
   char cov_service[KEY_SIZE] = "";
+  char cov_location[LOCATION_SIZE] = "";
+  char cov_project[PROJECT_SIZE] = "";
   customvariablesmember *customvar = NULL;
 
   json_t *json;
@@ -431,6 +441,14 @@ check_handler (int event_type, void *data)
           {
             snprintf (cov_service, KEY_SIZE, "%s", cvar->variable_value);
           }
+          if (!strcmp (cvar->variable_name, "LOCATION"))
+          {
+            snprintf (cov_location, LOCATION_SIZE, "%s", cvar->variable_value);
+          }
+          if (!strcmp (cvar->variable_name, "PROJECT"))
+          {
+            snprintf (cov_project, PROJECT_SIZE, "%s", cvar->variable_value);
+          }
         }
 
         if (host_chk_data->long_output)
@@ -453,6 +471,8 @@ check_handler (int event_type, void *data)
         process_macros (raw_command, &command_line, 0);
 #endif
         json = json_object ();
+        json_object_set_new (json, "location", json_string (location));
+        json_object_set_new (json, "project", json_string (project));
         json_object_set_new (json, "origin", json_pack ("s+", "nagios/", hostname));
         json_object_set_new (json, "resource", json_string (host_chk_data->host_name));
         json_object_set_new (json, "event", json_string ("Host Check"));
@@ -525,6 +545,8 @@ check_handler (int event_type, void *data)
             }
 
             json = json_object ();
+            json_object_set_new (json, "location", json_string (location));
+            json_object_set_new (json, "project", json_string (project));
             json_object_set_new (json, "origin", json_pack ("s+", "nagios/", svc_chk_data->host_name));
             json_object_set_new (json, "type", json_string ("Heartbeat"));
             json_object_set_new (json, "tags", json_pack ("[s]", VERSION));
@@ -585,6 +607,8 @@ check_handler (int event_type, void *data)
           process_macros (raw_command, &command_line, 0);
 #endif
           json = json_object ();
+          json_object_set_new (json, "location", json_string (location));
+          json_object_set_new (json, "project", json_string (project));
           json_object_set_new (json, "origin", json_pack ("s+", "nagios/", hostname));
           json_object_set_new (json, "resource", json_string (svc_chk_data->host_name));
           json_object_set_new (json, "event", json_string (svc_chk_data->service_description));
@@ -657,6 +681,8 @@ check_handler (int event_type, void *data)
         HASH_ADD_STR (downtimes, key, dt);
 
         json = json_object ();
+        json_object_set_new (json, "location", json_string (location));
+        json_object_set_new (json, "project", json_string (project));
         json_object_set_new (json, "origin", json_pack ("s+", "nagios/", hostname));
         json_object_set_new (json, "resource", json_string (downtime_data->host_name));
         json_object_set_new (json, "event", json_string (downtime_data->service_description ? downtime_data->service_description : "Host Check"));
@@ -695,6 +721,8 @@ check_handler (int event_type, void *data)
           free (dt);
         }
         json = json_object ();
+        json_object_set_new (json, "location", json_string (location));
+        json_object_set_new (json, "project", json_string (project));
         json_object_set_new (json, "origin", json_pack ("s+", "nagios/", hostname));
         json_object_set_new (json, "resource", json_string (downtime_data->host_name));
         json_object_set_new (json, "event", json_string (downtime_data->service_description ? downtime_data->service_description : "Host Check"));
